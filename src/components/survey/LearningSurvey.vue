@@ -29,6 +29,7 @@
         <p
           v-if="invalidInput"
         >One or more input fields are invalid. Please check your provided data.</p>
+        <p v-if="error">{{ error }}</p>
         <div>
           <base-button>Submit</base-button>
         </div>
@@ -44,9 +45,9 @@ export default {
       enteredName: '',
       chosenRating: null,
       invalidInput: false,
+      error: null,
     };
   },
-  emits: ['survey-submit'],
   methods: {
     submitSurvey() {
       if (this.enteredName === '' || !this.chosenRating) {
@@ -55,9 +56,28 @@ export default {
       }
       this.invalidInput = false;
 
-      this.$emit('survey-submit', {
-        userName: this.enteredName,
-        rating: this.chosenRating,
+      //Fetch is browser default,we can also use axios or another package
+      //surveys is just a name we provide for the page, .json is just a requirement for firebase here
+
+      fetch('https://vuejs-test-4a335-default-rtdb.firebaseio.com/surveys.json', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          name: this.enteredName,
+          rating: this.chosenRating,
+        }),
+      }).then(response => {
+        //handling server side error like remove JSON.stringify
+        if(response.ok){}
+        else{
+          throw new Error('Server Error !!');
+        }
+      }).catch(error => {
+        //handling technical error thrown by browser like remove .json from firebase link
+        console.log(error);
+        this.error = error.message; //message came from throw new
       });
 
       this.enteredName = '';
